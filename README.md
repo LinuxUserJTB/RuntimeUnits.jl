@@ -6,9 +6,10 @@ expressions are user input and can therefore not be type-stable. `RuntimeUnits.j
 as possible (i. e. for number and exponent types).
 
 The package provides two types:
-- `UnitSystem` just for storing descriptive strings about dimensions and pretty-printing of units.
-- `Quantity{V, E}` for representing quantities that have a value of type `V` and unit exponents of
-    type `E`.
+- `UnitSystem` for storing descriptive strings about dimensions,
+  pretty-printing of units and storing defined units as `Quantities`.
+- `Quantity{V, E}` for representing quantities that have a value of
+  type `V` and unit exponents of type `E`.
 
 `Quantity` supports `+`, `-` with other `Quantity`s; `*`, `/`, `//` with `Quantity`s and scalars and
 `^` with scalars. `V` and `E` are expected to support `+`, `-`, `*`. `V` should additionally support
