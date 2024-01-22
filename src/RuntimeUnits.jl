@@ -72,6 +72,7 @@ end
 
 Base.convert(T::Type{Quantity}, v) = T(v, dimension(zero(T)))
 Base.convert(T::Type{<:Number}, v::Quantity) = (assert_dimension_match(v, zero(typeof(v))); convert(T, value(v)))
+Base.convert(T::Type{Quantity{V, E}}, v::Quantity) where {V, E} = Quantity{V, E}(value(v), dimension(v))
 Base.AbstractFloat(q::Quantity) = AbstractFloat(checked_value(q))
 
 (Base. +)(q1::Quantity, q2::Quantity) = linear_combine(+, q1, q2)
@@ -81,14 +82,15 @@ Base.AbstractFloat(q::Quantity) = AbstractFloat(checked_value(q))
 (Base. //)(q1::Quantity, q2::Quantity) = combine(//, -, q1, q2)
 (Base. ^)(q1::Quantity, q2::Quantity) = q1 ^ checked_value(q2)
 
-(Base. *)(q::Quantity, f) = Quantity(value(q) * f, dimension(q))
-(Base. *)(f, q::Quantity) = Quantity(f * value(q), dimension(q))
-(Base. /)(q::Quantity, d) = Quantity(value(q) / d, dimension(q))
-(Base. /)(d, q::Quantity) = Quantity(d / value(q), .-dimension(q))
-(Base. //)(q::Quantity, d) = Quantity(value(q) // d, dimension(q))
-(Base. //)(d, q::Quantity) = Quantity(d // value(q), .-dimension(q))
-(Base. ^)(q::Quantity, ex) = Quantity(value(q) ^ ex, dimension(q) .* ex)
-(Base. ^)(b, q::Quantity) = b ^ checked_value(q)
+(Base. *)(q::Quantity, f::Real) = Quantity(value(q) * f, dimension(q))
+(Base. *)(f::Real, q::Quantity) = Quantity(f * value(q), dimension(q))
+(Base. /)(q::Quantity, d::Real) = Quantity(value(q) / d, dimension(q))
+(Base. /)(d::Real, q::Quantity) = Quantity(d / value(q), .-dimension(q))
+(Base. //)(q::Quantity, d::Real) = Quantity(value(q) // d, dimension(q))
+(Base. //)(d::Real, q::Quantity) = Quantity(d // value(q), .-dimension(q))
+(Base. ^)(q::Quantity, ex::Real) = Quantity(value(q) ^ ex, dimension(q) .* ex)
+(Base. ^)(q::Quantity, ex::Integer) = Quantity(value(q) ^ ex, dimension(q) .* ex)
+(Base. ^)(b::Real, q::Quantity) = b ^ checked_value(q)
 
 realfunc(f, q::Quantity...) = Quantity(f(checked_value.(q)...), promote_type(exptype.(q)...)[])
 
