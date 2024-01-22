@@ -37,6 +37,10 @@ unit_string(u::UnitSystem, dim, ex) = ex == 0 ? "" : (base_unit_name(u, dim) * (
 unit_string(u::UnitSystem, dims) = join(Iterators.filter(!isempty, unit_string(u, i, dims[i]) for i in eachindex(dims)), '*')
 unit_string(u::UnitSystem, q::Quantity) = string(value(q)) * unit_string(u, dimension(q))
 
+(u::UnitSystem)(value, unitname) = defined_unit(u, unitname) * value
+(u::UnitSystem)(unitname) = defined_unit(u, unitname)
+Quantity(u::UnitSystem, value, unitname) = defined_unit(u, unitname) * value
+
 unit_string(q::Quantity) = unit_string(SI, q)
 
 value(q::Quantity) = q.value
