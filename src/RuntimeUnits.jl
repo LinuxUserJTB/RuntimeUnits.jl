@@ -1,30 +1,39 @@
 module RuntimeUnits
 
-export UnitSystem, Quantity, value, dimension, compare_dimensions, realfunc
-
-struct UnitSystem
-    dimension_names::Vector{String}
-    base_units::Vector{String}
-    dimension_indices::Dict{String, Int}
-end
+export UnitSystem, dimension_names, dimension_name, base_unit_names, base_unit_name, defined_units, defined_unit, define_unit!, define_prefix!
+export Quantity, value, dimension, unit_string, compare_dimensions, realfunc
 
 struct Quantity{V, E} <: Real
     value::V
     dimension::Vector{E}
 end
 
-UnitSystem(dimension_names, base_units) = UnitSystem(dimension_names, base_units, Dict(dimension_names[i] => i for i in eachindex(dimension_names)))
+struct UnitSystem{V, E}
+    dimension_names::Vector{String}
+    base_unit_names::Vector{String}
+    defined_units::Dict{String, Quantity{V, E}}
+end
 
-SI = UnitSystem(["length", "mass", "time", "current", "temperature", "luminosity", "amount"], ["m", "kg", "s", "A", "K", "cd", "mol"])
+dimension_names(u::UnitSystem) = u.dimension_names
+dimension_name(u::UnitSystem, dim) = dimension_names(u)[dim]
+base_unit_names(u::UnitSystem) = u.base_unit_names
+base_unit_name(u::UnitSystem, dim) = base_unit_names(u)[dim]
+defined_units(u::UnitSystem) = u.defined_units
+defined_unit(u::UnitSystem, name) = defined_units(u)[name]
 
-"Name of dimension `dim` in unit system `u`"
-dimension_name(u::UnitSystem, dim) = u.dimension_names[dim]
-base_unit(u::UnitSystem, dim) = u.base_units[dim]
-base_unit(u::UnitSystem, dim::AbstractString) = base_unit(u, dimension_by_name(u, dim))
-"Dimension index of dimension with name `dim_name` in unit system `u`"
-dimension_by_name(u::UnitSystem, dim_name) = u.dimension_indices[dim_name]
+define_unit!(u::UnitSystem, name, unit::Quantity) = defined_units(u)[name] = unit
+define_prefix!(u::UnitSystem, basename, prefix, factor) = define_unit!(u, prefix * basename, defined_unit(u, basename) * factor)
 
-unit_string(u::UnitSystem, dim, ex) = ex == 0 ? "" : (base_unit(u, dim) * (ex == 1 ? "" : "^" * string(ex)))
+SI = begin
+    u = UnitSystem(["length", "mass", "time", "current", "temperature", "luminosity", "amount"], ["m", "kg", "s", "A", "K", "cd", "mol"], Dict{String, Quantity{Int, Int}}())
+    for dim in eachindex(base_unit_names(u))
+        basename = base_unit_name(u, dim)
+        define_unit!(u, basename, Quantity(1, setindex!(fill(0, dim), 1, dim)))
+    end
+    u
+end
+
+unit_string(u::UnitSystem, dim, ex) = ex == 0 ? "" : (base_unit_name(u, dim) * (ex == 1 ? "" : "^" * string(ex)))
 unit_string(u::UnitSystem, dims) = join(Iterators.filter(!isempty, unit_string(u, i, dims[i]) for i in eachindex(dims)), '*')
 unit_string(u::UnitSystem, q::Quantity) = string(value(q)) * unit_string(u, dimension(q))
 
